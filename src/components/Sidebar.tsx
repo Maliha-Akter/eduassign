@@ -26,7 +26,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const user = session?.user as User | undefined;
     
     // Safely type cast role or default to student
-    const userRole = (user as any)?.role || 'student'; 
+    const userRole = (user as unknown as { role?: string })?.role || 'student'; 
 
     // ✅ Dynamic Role-Based Menus
     const getSidebarLinks = (role: string) => {
@@ -98,7 +98,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             >
                 <div className="h-16 shrink-0 flex items-center justify-between px-6 border-b border-gray-200 bg-[#F9FAFB]">
                     <Link href="/" className="text-xl font-bold flex items-center gap-2 group" onClick={() => onClose()}>
-                        {/* Primary Green & Accent Amber Branding */}
                         <div className="bg-[#15803D] text-[#F59E0B] p-1.5 rounded-lg shadow-sm transition-transform group-hover:scale-105">
                             <GraduationCap className="w-5 h-5" />
                         </div>

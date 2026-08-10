@@ -1,7 +1,7 @@
 // src/app/dashboard/layout.tsx
 import React from 'react';
 import { requireRole } from '../lib/security/session'; // Adjust path as needed
-import DashboardLayoutClient from './DashboardLayoutClient';
+import DashboardLayoutClient from './dashboard/DashboardLayoutClient';
 
 export const metadata = {
     title: {

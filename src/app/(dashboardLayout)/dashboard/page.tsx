@@ -6,7 +6,7 @@ import {
     BookOpen, CheckSquare, FileText, Clock, 
     Calendar, Loader2, AlertCircle
 } from 'lucide-react';
-import { authClient } from '../lib/auth-client';
+import { authClient } from '../../lib/auth-client';
 import { toast } from 'react-toastify';
 
 interface RecentWorkItem {
