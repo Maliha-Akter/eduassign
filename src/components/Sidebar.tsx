@@ -60,6 +60,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             ...baseLinks,
             { label: 'My Classes', href: '/dashboard/student/classes', icon: <BookOpen className="w-5 h-5" /> },
             { label: 'Assigned Work', href: '/dashboard/student/assignments', icon: <FileText className="w-5 h-5" /> },
+            { label: 'Submissions', href: '/dashboard/student/submissions', icon: <FileText className="w-5 h-5" /> },
             { label: 'Grades & Feedback', href: '/dashboard/student/grades', icon: <Award className="w-5 h-5" /> },
         ];
     };

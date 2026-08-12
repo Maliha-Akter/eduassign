@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-// 👈 NEW: Added Mail icon to imports
-import { Loader2, Calendar, FileText, CheckCircle, AlertCircle, User, Mail } from 'lucide-react'; 
+import { Loader2, Calendar, FileText, CheckCircle, AlertCircle, User, Mail, Lock } from 'lucide-react'; 
 import { toast } from 'react-toastify';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5024";
@@ -44,6 +43,13 @@ export default function AssignmentSubmissionPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        // Prevent update if already graded
+        if (submission?.status === 'Graded') {
+            toast.error("This assignment has been graded and can no longer be modified.");
+            return;
+        }
+
         setSubmitting(true);
         try {
             const url = submission 
@@ -78,6 +84,7 @@ export default function AssignmentSubmissionPage() {
     if (!assignment) return <div className="text-center py-20 text-gray-500">Assignment not found.</div>;
 
     const isPastDeadline = new Date(assignment.deadline) < new Date();
+    const isGraded = submission?.status === 'Graded';
 
     return (
         <div className="max-w-4xl mx-auto space-y-6 pb-20">
@@ -90,7 +97,6 @@ export default function AssignmentSubmissionPage() {
                     </div>
                     <div className="bg-gray-50 border border-gray-100 rounded-lg p-4 min-w-[220px]">
                         
-                        {/* 👈 UPDATED: Display Teacher Name and Clickable Email */}
                         {assignment.teacherName && (
                             <div className="mb-3 pb-3 border-b border-gray-200">
                                 <div className="flex items-center text-sm font-medium text-gray-800 mb-1.5">
@@ -130,17 +136,19 @@ export default function AssignmentSubmissionPage() {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div>
                             <p className="text-xs text-gray-500 uppercase font-semibold">Status</p>
-                            <div className="flex items-center gap-1.5 mt-1 text-sm font-medium text-green-700 bg-green-50 px-2 py-1 rounded w-fit">
+                            <div className={`flex items-center gap-1.5 mt-1 text-sm font-medium px-2 py-1 rounded w-fit ${
+                                isGraded ? 'text-green-700 bg-green-50' : 'text-blue-700 bg-blue-50'
+                            }`}>
                                 <CheckCircle size={16} /> {submission.status}
                             </div>
                         </div>
                         <div>
                             <p className="text-xs text-gray-500 uppercase font-semibold">Submitted At</p>
-                            <p className="text-sm font-medium mt-1">{new Date(submission.submittedAt).toLocaleDateString()}</p>
+                            <p className="text-sm font-medium mt-1">{submission.submittedAt ? new Date(submission.submittedAt).toLocaleDateString() : '--'}</p>
                         </div>
                         <div>
                             <p className="text-xs text-gray-500 uppercase font-semibold">Marks</p>
-                            <p className="text-sm font-medium mt-1">{submission.marks !== null ? `${submission.marks} / ${assignment.maximumMarks}` : 'Not graded'}</p>
+                            <p className="text-sm font-medium mt-1">{submission.marks !== null && submission.marks !== undefined ? `${submission.marks} / ${assignment.maximumMarks}` : 'Not graded'}</p>
                         </div>
                     </div>
                     {submission.feedback && (
@@ -156,7 +164,12 @@ export default function AssignmentSubmissionPage() {
             <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Your Answer</h3>
                 
-                {isPastDeadline && !submission ? (
+                {isGraded ? (
+                    <div className="p-4 bg-yellow-50 text-yellow-800 rounded-lg flex items-center gap-2 border border-yellow-200">
+                        <Lock size={20} className="shrink-0" />
+                        This assignment has been graded by your teacher. Editing and updating your answer is locked.
+                    </div>
+                ) : isPastDeadline && !submission ? (
                     <div className="p-4 bg-red-50 text-red-700 rounded-lg flex items-center gap-2">
                         <AlertCircle size={20} />
                         The deadline has passed. You can no longer submit this assignment.
@@ -168,7 +181,7 @@ export default function AssignmentSubmissionPage() {
                             onChange={(e) => setAnswer(e.target.value)}
                             placeholder="Type your answer here..."
                             rows={8}
-                            disabled={submitting || (isPastDeadline && !!submission)}
+                            disabled={submitting || isGraded || (isPastDeadline && !!submission)}
                             className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 resize-none"
                             required
                         />
@@ -176,14 +189,17 @@ export default function AssignmentSubmissionPage() {
                         <div className="mt-4 flex justify-end">
                             <button
                                 type="submit"
-                                disabled={submitting || (isPastDeadline && !!submission)}
+                                disabled={submitting || isGraded || (isPastDeadline && !!submission)}
                                 className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
                             >
                                 {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
                                 {submission ? "Update Submission" : "Submit Assignment"}
                             </button>
                         </div>
-                        {(isPastDeadline && !!submission) && (
+                        {isGraded && (
+                            <p className="text-sm text-gray-500 mt-2 text-right">Graded assignments are locked.</p>
+                        )}
+                        {(isPastDeadline && !!submission && !isGraded) && (
                             <p className="text-sm text-gray-500 mt-2 text-right">Deadline has passed. Editing is locked.</p>
                         )}
                     </form>

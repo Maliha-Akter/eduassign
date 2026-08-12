@@ -13,37 +13,43 @@ type AssignmentFormInputs = {
     maximumMarks: number;
 };
 
+// Fallback prevents fetching from `undefined/api/assignments` if env var is missing
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5024";
+
 export default function CreateAssignmentPage() {
     const { register, handleSubmit, formState: { errors }, reset } = useForm<AssignmentFormInputs>();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitType, setSubmitType] = useState<"Draft" | "Published" | null>(null);
 
-    // Generate Class 1 to 10
+    // If your backend expects integer or GUID IDs, match those exact values here
     const classOptions = Array.from({ length: 10 }, (_, i) => ({
-        id: `class_${i + 1}`,
+        id: `${i + 1}`,
         name: `Class ${i + 1}`
     }));
 
-    // Generate Subject List
     const subjectOptions = [
-        { id: "sub_bangla", name: "Bangla" },
-        { id: "sub_english", name: "English" },
-        { id: "sub_math", name: "Mathematics" },
-        { id: "sub_phy", name: "Physics" },
-        { id: "sub_che", name: "Chemistry" },
-        { id: "sub_bio", name: "Biology" },
-        { id: "sub_ict", name: "ICT" },
-        { id: "sub_history", name: "History" },
-        { id: "sub_geo", name: "Geography" },
-        { id: "sub_rel", name: "Religion" },
+        { id: "1", name: "Bangla" },
+        { id: "2", name: "English" },
+        { id: "3", name: "Mathematics" },
+        { id: "4", name: "Physics" },
+        { id: "5", name: "Chemistry" },
+        { id: "6", name: "Biology" },
+        { id: "7", name: "ICT" },
+        { id: "8", name: "History" },
+        { id: "9", name: "Geography" },
+        { id: "10", name: "Religion" },
     ];
 
     const onSubmit = async (data: AssignmentFormInputs, status: "Draft" | "Published") => {
         setIsSubmitting(true);
         setSubmitType(status);
         try {
-            // Combine separate date and time inputs into a single ISO datetime string
-            const combinedDateTime = new Date(`${data.deadlineDate}T${data.deadlineTime}:00`).toISOString();
+            // Validate date string before converting to ISO format to prevent RangeError
+            const dateObj = new Date(`${data.deadlineDate}T${data.deadlineTime}`);
+            if (isNaN(dateObj.getTime())) {
+                throw new Error("Invalid date or time selected. Please select a valid deadline.");
+            }
+            const combinedDateTime = dateObj.toISOString();
 
             const formattedData = {
                 title: data.title,
@@ -55,7 +61,7 @@ export default function CreateAssignmentPage() {
                 status: status,
             };
 
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/assignments`, {
+            const res = await fetch(`${API_BASE_URL}/api/assignments`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -71,7 +77,7 @@ export default function CreateAssignmentPage() {
                 let errorMsg = `Server error: ${res.status}`;
                 try {
                     const errJson = await res.json();
-                    errorMsg = errJson.message || errorMsg;
+                    errorMsg = errJson.message || errJson.title || errorMsg;
                 } catch { }
                 throw new Error(errorMsg);
             }
@@ -80,14 +86,13 @@ export default function CreateAssignmentPage() {
             alert(responseData.message || `Assignment ${status === "Draft" ? "saved as draft" : "published"} successfully!`);
             reset();
         } catch (error: any) {
-            alert(error.message);
+            alert(error.message || "An unexpected error occurred.");
         } finally {
             setIsSubmitting(false);
             setSubmitType(null);
         }
     };
 
-    // Shared input styling for clean UI
     const inputClasses = "w-full bg-gray-50 border border-gray-200 text-gray-800 rounded-xl p-3.5 text-sm focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all duration-200";
     const labelClasses = "block text-sm font-semibold text-gray-700 mb-2";
 
@@ -95,7 +100,6 @@ export default function CreateAssignmentPage() {
         <div className="min-h-screen bg-gray-50/50 py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-4xl mx-auto">
                 
-                {/* Header Section */}
                 <div className="mb-10 text-center sm:text-left">
                     <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Create Assignment</h1>
                     <p className="mt-2 text-gray-500 text-sm sm:text-base">
@@ -103,11 +107,9 @@ export default function CreateAssignmentPage() {
                     </p>
                 </div>
 
-                {/* Form Card */}
                 <div className="bg-white border border-gray-100 shadow-xl shadow-gray-200/40 rounded-3xl p-6 sm:p-10">
                     <form className="space-y-8">
                         
-                        {/* Title & Description */}
                         <div className="space-y-6">
                             <div>
                                 <label className={labelClasses}>Assignment Title</label>
@@ -134,7 +136,6 @@ export default function CreateAssignmentPage() {
 
                         <hr className="border-gray-100" />
 
-                        {/* Dropdowns (Class & Subject) */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label className={labelClasses}>Target Class</label>
@@ -167,7 +168,6 @@ export default function CreateAssignmentPage() {
                             </div>
                         </div>
 
-                        {/* Date, Time, and Marks */}
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                             <div>
                                 <label className={labelClasses}>Due Date</label>
@@ -204,7 +204,6 @@ export default function CreateAssignmentPage() {
                             </div>
                         </div>
 
-                        {/* Action Buttons */}
                         <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-6 border-t border-gray-100">
                             <button
                                 type="button"
