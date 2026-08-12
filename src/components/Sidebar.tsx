@@ -48,6 +48,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         if (role === 'teacher') {
             return [
                 ...baseLinks,
+                { label: 'My Students', href: '/dashboard/teacher/students', icon: <Users className="w-5 h-5" /> }, // NEW LINK
                 { label: 'My Assignments', href: '/dashboard/teacher/assignments', icon: <Files className="w-5 h-5" /> },
                 { label: 'Create Assignment', href: '/dashboard/teacher/assignments/new', icon: <FilePlus className="w-5 h-5" /> },
                 { label: 'Student Submissions', href: '/dashboard/teacher/submissions', icon: <CheckSquare className="w-5 h-5" /> },

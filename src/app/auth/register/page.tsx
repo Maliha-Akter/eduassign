@@ -161,8 +161,8 @@ function RegisterForm() {
                             type="button"
                             onClick={() => setRole("student")}
                             className={`flex flex-col items-center justify-center p-3.5 rounded-2xl border-2 transition-all ${role === "student"
-                                    ? "border-amber-500 bg-amber-50/50 text-amber-900 shadow-sm"
-                                    : "border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300"
+                                ? "border-amber-500 bg-amber-50/50 text-amber-900 shadow-sm"
+                                : "border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300"
                                 }`}
                         >
                             <GraduationCap className={role === "student" ? "text-amber-600" : "text-slate-400"} size={24} />
@@ -174,8 +174,8 @@ function RegisterForm() {
                             type="button"
                             onClick={() => setRole("teacher")}
                             className={`flex flex-col items-center justify-center p-3.5 rounded-2xl border-2 transition-all ${role === "teacher"
-                                    ? "border-amber-500 bg-amber-50/50 text-amber-900 shadow-sm"
-                                    : "border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300"
+                                ? "border-amber-500 bg-amber-50/50 text-amber-900 shadow-sm"
+                                : "border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300"
                                 }`}
                         >
                             <School className={role === "teacher" ? "text-amber-600" : "text-slate-400"} size={24} />
@@ -288,20 +288,29 @@ function RegisterForm() {
 
                 {/* Conditional Fields: Student */}
                 {role === "student" && (
-                    <TextField isRequired name="class" className="flex flex-col gap-1.5">
-                        <Label className="text-xs font-medium text-slate-600">Class / Grade</Label>
-                        <InputGroup className={`flex items-center gap-2 border rounded-xl px-3 bg-slate-50 focus-within:border-amber-500 transition-colors ${errors.studentClass ? "border-red-500" : "border-slate-200"}`}>
-                            <Input
+                    <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-medium text-slate-600">Class / Grade</label>
+                        <div className={`flex items-center gap-2 border rounded-xl px-3 bg-slate-50 focus-within:border-amber-500 transition-colors ${errors.studentClass ? "border-red-500" : "border-slate-200"}`}>
+                            <select
                                 value={studentClass}
                                 onChange={(e) => setStudentClass(e.target.value)}
-                                placeholder="e.g., Grade 10 or Class 12"
-                                className="w-full bg-transparent py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400"
-                            />
-                        </InputGroup>
-                        {errors.studentClass && <p className="text-[10px] text-red-500 mt-0.5">{errors.studentClass}</p>}
-                    </TextField>
-                )}
+                                className="w-full bg-transparent py-2.5 text-sm text-slate-900 outline-none cursor-pointer"
+                            >
+                                <option value="" disabled>Select Class...</option>
+                                {Array.from({ length: 10 }, (_, i) => {
+                                    const classNum = (i + 1).toString();
 
+                                    return (
+                                        <option key={classNum} value={classNum}>
+                                            Class {classNum}
+                                        </option>
+                                    );
+                                })}
+                            </select>
+                        </div>
+                        {errors.studentClass && <p className="text-[10px] text-red-500 mt-0.5">{errors.studentClass}</p>}
+                    </div>
+                )}
                 {/* Conditional Fields: Teacher */}
                 {role === "teacher" && (
                     <div className="flex flex-col gap-4 p-4 rounded-2xl bg-amber-50/40 border border-amber-200/60">
