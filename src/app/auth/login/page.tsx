@@ -69,7 +69,7 @@ function LoginForm() {
                 callbackURL: "/",
             });
             if (error) toast.error("Demo login failed: " + error.message);
-            else window.location.href = "/dashboard";
+            else window.location.href = "/";
         } finally {
             setIsLoading(false);
         }

@@ -21,7 +21,7 @@ function RegisterForm() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
-    
+
     // Photo fields
     const [image, setImage] = useState("");
     const [fileName, setFileName] = useState("");
@@ -160,11 +160,10 @@ function RegisterForm() {
                         <button
                             type="button"
                             onClick={() => setRole("student")}
-                            className={`flex flex-col items-center justify-center p-3.5 rounded-2xl border-2 transition-all ${
-                                role === "student"
+                            className={`flex flex-col items-center justify-center p-3.5 rounded-2xl border-2 transition-all ${role === "student"
                                     ? "border-amber-500 bg-amber-50/50 text-amber-900 shadow-sm"
                                     : "border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300"
-                            }`}
+                                }`}
                         >
                             <GraduationCap className={role === "student" ? "text-amber-600" : "text-slate-400"} size={24} />
                             <span className="text-sm font-bold mt-1">🎓 Student</span>
@@ -174,11 +173,10 @@ function RegisterForm() {
                         <button
                             type="button"
                             onClick={() => setRole("teacher")}
-                            className={`flex flex-col items-center justify-center p-3.5 rounded-2xl border-2 transition-all ${
-                                role === "teacher"
+                            className={`flex flex-col items-center justify-center p-3.5 rounded-2xl border-2 transition-all ${role === "teacher"
                                     ? "border-amber-500 bg-amber-50/50 text-amber-900 shadow-sm"
                                     : "border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300"
-                            }`}
+                                }`}
                         >
                             <School className={role === "teacher" ? "text-amber-600" : "text-slate-400"} size={24} />
                             <span className="text-sm font-bold mt-1">👨‍🏫 Teacher</span>
@@ -221,13 +219,16 @@ function RegisterForm() {
                 <div className="flex flex-col gap-1.5">
                     <div className="flex justify-between items-center">
                         <Label className="text-xs font-medium text-slate-600">Profile Picture (Optional)</Label>
-                        <span className="text-[9px] text-slate-400">Paste URL or upload file</span>
+                        {/* Updated helper text here */}
+                        <span className="text-[9px] text-slate-400">URL must start with http:// or https://</span>
                     </div>
                     <InputGroup className="flex items-center gap-2 border border-slate-200 rounded-xl px-3 bg-slate-50 focus-within:border-amber-500 transition-colors">
                         <ImageIcon className="text-slate-400" size={16} />
                         <Input
                             placeholder="https://example.com/avatar.png"
                             type="url"
+                            pattern="^https?://.*" // Added HTML5 pattern validation
+                            title="URL must start with http:// or https://" // Added tooltip for validation
                             value={image}
                             onChange={(e) => setImage(e.target.value)}
                             className="w-full bg-transparent py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400"

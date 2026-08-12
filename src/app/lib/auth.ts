@@ -83,8 +83,9 @@ export const auth = betterAuth({
   
   session: {
     expiresIn: 60 * 60 * 24, // 1 day in seconds
+    // Change enabled to false to fix the stale session issue
     cookieCache: {
-      enabled: true,
+      enabled: false, 
       strategy: "jwt",
       maxAge: 60 * 24 * 60,
     },
