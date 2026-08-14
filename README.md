@@ -1,36 +1,124 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# EduAssign - Assignment & Submission Management System
 
-## Getting Started
+EduAssign is a role-based Assignment & Submission Management System designed for schools and colleges.
 
-First, run the development server:
+The system allows administrators to manage users and academic information, teachers to create and manage assignments and evaluate student submissions, and students to view and submit assignments.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 1. Project Overview
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+EduAssign is a full-stack web application developed as part of the Assistant Software Engineer Recruitment Project.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The application provides separate functionality for three user roles:
+- Admin
+- Teacher
+- Student
 
-## Learn More
+The main purpose of the system is to simplify assignment creation, assignment submission, evaluation, and academic management through a centralized platform.
 
-To learn more about Next.js, take a look at the following resources:
+### Main Workflow
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**Teacher:**
+1. Creates an assignment.
+2. Selects the class/course and subject.
+3. Defines the title, description, deadline, and maximum marks.
+4. Publishes the assignment or keeps it as a draft.
+5. Views student submissions.
+6. Gives marks and feedback.
+7. Updates the submission status when necessary.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**Student:**
+1. Logs into the system.
+2. Views assignments available for their class/course.
+3. Views assignment details and deadlines.
+4. Submits an answer.
+5. Updates the submission before the deadline when allowed.
+6. Views submission status, marks, and teacher feedback.
 
-## Deploy on Vercel
+**Admin:**
+1. Manages users.
+2. Manages classes/courses and subjects.
+3. Assigns teachers to subjects/classes.
+4. Views assignments and submissions.
+5. Manages application-level settings where necessary.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 2. Main Features
+
+### Authentication and Authorization
+- User login and registration
+- Role-based access control (Admin, Teacher, Student roles)
+- Protected frontend routes and backend API endpoints
+- Session-based authentication using Better Auth
+- Secure authentication information passing between frontend and ASP.NET Core API
+
+### Admin Features
+- Manage users, roles, and block/unblock capabilities
+- Manage classes/courses and subjects
+- Assign teachers to classes/subjects
+- View all assignments and submissions
+- Manage application-level settings
+
+### Teacher Features
+- View assigned subjects/classes via the teacher portal
+- Create, update, and delete assignments (title, description, deadline, max marks, draft/publish status)
+- View student submissions, grade them, provide feedback, and update statuses
+
+### Student Features
+- View assigned class/course assignments and deadlines
+- Submit answers and update submissions before deadlines
+- Track submission status, marks, and teacher feedback
+
+### API Features
+- RESTful ASP.NET Core Web API architecture
+- Request validation, error handling, and security controls
+- MongoDB database integration
+- OpenAPI documentation
+
+---
+
+## 3. Technology Stack
+
+- **Frontend:** Next.js, React, TypeScript, Tailwind CSS, Lucide React, React Toastify, Better Auth, REST API integration
+- **Backend:** ASP.NET Core Web API, C#, MongoDB Driver, OpenAPI, Dependency Injection
+- **Database:** MongoDB
+- **Testing:** .NET testing framework (Unit tests for core business rules and workflows)
+- **Development Tools:** Visual Studio Code, Git, GitHub, Postman, Swagger/OpenAPI
+
+---
+
+## 4. Project Structure
+
+The repository contains both the frontend and backend applications in a single monorepo structure:
+
+```text
+eduassign/
+│
+├── frontend/
+│   │   ├── src/
+│   │   │   ├── app/
+│   │   │   ├── components/
+│   │   │   └── lib/
+│   │   ├── public/
+│   │   ├── package.json
+│   │   └── .env.example
+│
+├── backend/
+│   │   ├── EduAssign.API/
+│   │   │   ├── Controllers/
+│   │   │   ├── Data/
+│   │   │   ├── DTOs/
+│   │   │   ├── Models/
+│   │   │   ├── Services/
+│   │   │   ├── Validators/
+│   │   │   ├── Program.cs
+│   │   │   ├── appsettings.json
+│   │   │   └── EduAssign.API.csproj
+│   │   │
+│   │   └── EduAssign.Tests/
+│       └── ...
+│
+├── .gitignore
+└── README.md
