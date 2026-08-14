@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Loader2, X, FileText, CheckCircle2, BookOpen, MessageSquare, ExternalLink } from 'lucide-react';
+import { Loader2, X, FileText, CheckCircle2, BookOpen, MessageSquare, ExternalLink, ArrowRight, Eye } from 'lucide-react';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5024";
 
@@ -91,11 +91,6 @@ export default function MySubmissionsPage() {
         return sub.Status || sub.status || "Submitted";
     };
 
-    const getSubmittedAt = (sub: Submission): string => {
-        const dateStr = sub.SubmittedAt || sub.submittedAt;
-        return dateStr ? new Date(dateStr).toLocaleDateString() : "N/A";
-    };
-
     // Helper to auto-detect and render URLs as underlined clickable links
     const renderAnswerContent = (text: string) => {
         if (!text || text.trim() === "") {
@@ -139,76 +134,68 @@ export default function MySubmissionsPage() {
                 <p className="text-gray-500 text-sm mt-1">Track the status and grades of your submitted work.</p>
             </div>
 
-            {/* Submissions Table */}
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-gray-50 border-b border-gray-200 text-sm text-gray-500">
-                                <th className="py-4 px-6 font-medium">Subject</th>
-                                <th className="py-4 px-6 font-medium">Assignment ID</th>
-                                <th className="py-4 px-6 font-medium">Status</th>
-                                <th className="py-4 px-6 font-medium">Marks</th>
-                                <th className="py-4 px-6 font-medium">Submitted On</th>
-                                <th className="py-4 px-6 font-medium text-right">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody className="text-sm">
-                            {submissions.length === 0 ? (
-                                <tr>
-                                    <td colSpan={6} className="py-8 text-center text-gray-500">
-                                        You haven't submitted any assignments yet.
-                                    </td>
-                                </tr>
-                            ) : (
-                                submissions.map((sub) => {
-                                    const status = getStatus(sub);
-                                    const marks = getMarks(sub);
-                                    return (
-                                        <tr key={sub._id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                                            <td className="py-4 px-6 font-semibold text-gray-900">
-                                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-50 text-purple-700 border border-purple-100">
-                                                    <BookOpen className="w-3 h-3" />
-                                                    {getSubject(sub)}
-                                                </span>
-                                            </td>
-                                            <td className="py-4 px-6 font-medium text-gray-700 font-mono text-xs">
-                                                {getAssignmentId(sub)}
-                                            </td>
-                                            <td className="py-4 px-6">
-                                                <span className={`px-2.5 py-1 rounded-full text-xs font-medium border ${
-                                                    status === 'Graded'
-                                                        ? 'bg-green-50 text-green-700 border-green-200'
-                                                        : 'bg-blue-50 text-blue-700 border-blue-200'
-                                                }`}>
-                                                    {status}
-                                                </span>
-                                            </td>
-                                            <td className="py-4 px-6 font-medium">
-                                                {marks !== null ? (
-                                                    <span className="text-green-600 font-semibold">
-                                                        {marks} {sub.assignment?.MaximumMarks ? `/ ${sub.assignment.MaximumMarks}` : ''}
-                                                    </span>
-                                                ) : (
-                                                    <span className="text-gray-400">-</span>
-                                                )}
-                                            </td>
-                                            <td className="py-4 px-6 text-gray-500">{getSubmittedAt(sub)}</td>
-                                            <td className="py-4 px-6 text-right">
-                                                <button
-                                                    onClick={() => setSelectedSubmission(sub)}
-                                                    className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline text-sm font-medium transition-colors"
-                                                >
-                                                    View Details
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    );
-                                })
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+            {/* Submissions List Container */}
+            <div className="space-y-3">
+                {submissions.length === 0 ? (
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm py-12 text-center text-gray-500 text-sm">
+                        You haven't submitted any assignments yet.
+                    </div>
+                ) : (
+                    submissions.map((sub) => {
+                        const status = getStatus(sub);
+                        const marks = getMarks(sub);
+                        const submittedDateStr = sub.SubmittedAt || sub.submittedAt;
+                        const formattedDate = submittedDateStr ? new Date(submittedDateStr).toLocaleDateString() : "N/A";
+
+                        return (
+                            <div 
+                                key={sub._id} 
+                                className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                            >
+                                {/* Left Info Section */}
+                                <div className="space-y-2 flex-1">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-100">
+                                            <BookOpen className="w-3.5 h-3.5 flex-shrink-0" />
+                                            {getSubject(sub)}
+                                        </span>
+                                        <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold border ${
+                                            status === 'Graded'
+                                                ? 'bg-green-50 text-green-700 border-green-200'
+                                                : 'bg-blue-50 text-blue-700 border-blue-200'
+                                        }`}>
+                                            {status}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
+                                        <span className="font-mono text-gray-600 bg-gray-50 px-2 py-0.5 rounded border border-gray-100">
+                                            ID: {getAssignmentId(sub)}
+                                        </span>
+                                        <span>Submitted: {formattedDate}</span>
+                                        {marks !== null && (
+                                            <span className="text-green-600 font-semibold">
+                                                Marks: {marks} {sub.assignment?.MaximumMarks ? `/ ${sub.assignment.MaximumMarks}` : ''}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Right Action Button */}
+                                <div className="flex items-center justify-end pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100">
+                                    <button
+                                        onClick={() => setSelectedSubmission(sub)}
+                                        className="group relative inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs sm:text-sm font-semibold shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 hover:from-blue-700 hover:to-indigo-700 active:scale-95 transition-all duration-200"
+                                    >
+                                        <Eye className="w-4 h-4 transition-transform group-hover:scale-110" />
+                                        <span>View Details</span>
+                                        <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+                                    </button>
+                                </div>
+                            </div>
+                        );
+                    })
+                )}
             </div>
 
             {/* Submission Detail Modal */}
@@ -273,8 +260,8 @@ export default function MySubmissionsPage() {
                                 <div>
                                     <p className="text-xs text-gray-400 uppercase font-semibold">Submitted On</p>
                                     <p className="text-sm font-medium text-gray-700 mt-0.5">
-                                        {selectedSubmission.SubmittedAt || selectedSubmission.submittedAt
-                                            ? new Date(selectedSubmission.SubmittedAt || selectedSubmission.submittedAt).toLocaleString()
+                                        {(selectedSubmission.SubmittedAt || selectedSubmission.submittedAt)
+                                            ? new Date(selectedSubmission.SubmittedAt || selectedSubmission.submittedAt!).toLocaleString()
                                             : 'N/A'}
                                     </p>
                                 </div>

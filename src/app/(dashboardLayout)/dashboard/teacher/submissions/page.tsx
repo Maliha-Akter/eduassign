@@ -25,10 +25,10 @@ interface Submission {
 
 export default function StudentSubmissionsPage() {
     const [submissions, setSubmissions] = useState<Submission[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [connectionError, setConnectionError] = useState(false);
+    const [isFetching, setIsFetching] = useState<boolean>(true);
+    const [connectionError, setConnectionError] = useState<boolean>(false);
     const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
-    const [isSaving, setIsSaving] = useState(false);
+    const [isSaving, setIsSaving] = useState<boolean>(false);
 
     // Review form state inside modal
     const [reviewData, setReviewData] = useState({
@@ -39,7 +39,7 @@ export default function StudentSubmissionsPage() {
 
     const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5024';
 
-    const getAuthToken = () => {
+    const getAuthToken = (): string => {
         if (typeof window !== 'undefined') {
             return localStorage.getItem('token') || localStorage.getItem('accessToken') || '';
         }
@@ -47,8 +47,10 @@ export default function StudentSubmissionsPage() {
     };
 
     const fetchSubmissions = async () => {
-        setLoading(true);
+        setIsFetching(true);
         setConnectionError(false);
+        let isMounted = true;
+
         try {
             const token = getAuthToken();
             const headers: HeadersInit = {
@@ -71,23 +73,85 @@ export default function StudentSubmissionsPage() {
             
             // Normalize ID fields mapping safely
             const dataArray = Array.isArray(data) ? data : data.$values || data.items || [];
-            const normalizedData: Submission[] = dataArray.map((item: any) => ({
-                ...item,
-                id: String(item.id || item.submissionId || item._id || '')
-            }));
+            const normalizedData: Submission[] = dataArray.map((item: unknown) => {
+                const record = item as Record<string, unknown>;
+                return {
+                    ...(record as unknown as Submission),
+                    id: String(record.id || record.submissionId || record._id || '')
+                };
+            });
 
-            setSubmissions(normalizedData);
-        } catch (error: any) {
+            if (isMounted) {
+                setSubmissions(normalizedData);
+            }
+        } catch (error: unknown) {
             console.error("Error fetching submissions:", error);
-            setConnectionError(true);
-            toast.error("Could not connect to backend server.");
+            if (isMounted) {
+                setConnectionError(true);
+                toast.error("Could not connect to backend server.");
+            }
         } finally {
-            setLoading(false);
+            if (isMounted) {
+                setIsFetching(false);
+            }
         }
     };
 
     useEffect(() => {
-        fetchSubmissions();
+        let isMounted = true;
+        
+        const loadInitialData = async () => {
+            setIsFetching(true);
+            setConnectionError(false);
+            try {
+                const token = getAuthToken();
+                const headers: HeadersInit = {
+                    'Content-Type': 'application/json'
+                };
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+
+                const response = await fetch(`${API_BASE_URL}/api/submissions/teacher`, {
+                    headers,
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server returned status ${response.status}`);
+                }
+
+                const data = await response.json();
+                const dataArray = Array.isArray(data) ? data : data.$values || data.items || [];
+                const normalizedData: Submission[] = dataArray.map((item: unknown) => {
+                    const record = item as Record<string, unknown>;
+                    return {
+                        ...(record as unknown as Submission),
+                        id: String(record.id || record.submissionId || record._id || '')
+                    };
+                });
+
+                if (isMounted) {
+                    setSubmissions(normalizedData);
+                }
+            } catch (error: unknown) {
+                console.error("Error fetching submissions:", error);
+                if (isMounted) {
+                    setConnectionError(true);
+                    toast.error("Could not connect to backend server.");
+                }
+            } finally {
+                if (isMounted) {
+                    setIsFetching(false);
+                }
+            }
+        };
+
+        loadInitialData();
+
+        return () => {
+            isMounted = false;
+        };
     }, []);
 
     const openReviewModal = (submission: Submission) => {
@@ -95,7 +159,9 @@ export default function StudentSubmissionsPage() {
         setReviewData({
             marks: submission.marks ?? '',
             feedback: submission.feedback || '',
-            status: submission.status === 'Submitted' || submission.status === 'Late' ? 'Graded' : (submission.status as any)
+            status: (submission.status === 'Submitted' || submission.status === 'Late' 
+                ? 'Graded' 
+                : submission.status) as 'Submitted' | 'Graded' | 'Pending'
         });
     };
 
@@ -148,7 +214,8 @@ export default function StudentSubmissionsPage() {
 
             if (!response.ok) {
                 const errData = await response.json().catch(() => ({}));
-                throw new Error(errData.message || "Failed to update submission");
+                const errRecord = errData as Record<string, unknown>;
+                throw new Error((errRecord.message as string) || "Failed to update submission");
             }
 
             if (reviewData.status === 'Pending') {
@@ -161,7 +228,7 @@ export default function StudentSubmissionsPage() {
                             ...sub,
                             marks: Number(reviewData.marks),
                             feedback: reviewData.feedback,
-                            status: reviewData.status,
+                            status: reviewData.status as Submission['status'],
                           }
                         : sub
                 ));
@@ -169,9 +236,10 @@ export default function StudentSubmissionsPage() {
             }
 
             setSelectedSubmission(null);
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Error saving review:", error);
-            toast.error(error.message || "Failed to save review.");
+            const errorMessage = error instanceof Error ? error.message : "Failed to save review.";
+            toast.error(errorMessage);
         } finally {
             setIsSaving(false);
         }
@@ -204,7 +272,7 @@ export default function StudentSubmissionsPage() {
         });
     };
 
-    if (loading) {
+    if (isFetching && submissions.length === 0) {
         return (
             <div className="flex h-full items-center justify-center min-h-[400px]">
                 <Loader2 className="h-8 w-8 animate-spin text-[#15803D]"/>
@@ -220,13 +288,13 @@ export default function StudentSubmissionsPage() {
                     <h1 className="text-2xl font-bold text-[#374151]">Student Submissions</h1>
                     <p className="text-gray-500 text-sm mt-1">Review answers, assign marks, and provide student feedback.</p>
                 </div>
-                <button 
+                {/* <button 
                     onClick={fetchSubmissions}
                     className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-xs font-semibold text-gray-700 transition-colors"
                 >
                     <RefreshCw className="w-3.5 h-3.5" />
                     Refresh
-                </button>
+                </button> */}
             </div>
 
             {/* Connection Error Banner */}
@@ -244,68 +312,88 @@ export default function StudentSubmissionsPage() {
                 </div>
             )}
 
-            {/* Submissions Table */}
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-[#F9FAFB] border-b border-gray-200 text-sm text-gray-500">
-                                <th className="py-4 px-6 font-medium">Student</th>
-                                <th className="py-4 px-6 font-medium">Assignment</th>
-                                <th className="py-4 px-6 font-medium">Submitted Date</th>
-                                <th className="py-4 px-6 font-medium">Marks</th>
-                                <th className="py-4 px-6 font-medium">Status</th>
-                                <th className="py-4 px-6 font-medium text-right">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody className="text-sm">
-                            {submissions.length === 0 ? (
-                                <tr>
-                                    <td colSpan={6} className="py-8 text-center text-gray-500">
-                                        No submissions found for your assignments.
-                                    </td>
-                                </tr>
-                            ) : (
-                                submissions.map((sub) => (
-                                    <tr key={sub.id} className="border-b border-gray-100 hover:bg-[#F9FAFB] transition-colors">
-                                        <td className="py-4 px-6">
-                                            <div className="font-semibold text-[#374151]">{sub.studentName}</div>
-                                            <div className="text-xs text-gray-400">{sub.studentEmail}</div>
-                                        </td>
-                                        <td className="py-4 px-6">
-                                            <div className="text-[#374151] font-medium">{sub.assignmentTitle}</div>
-                                            <div className="text-xs text-gray-500">{sub.className}</div>
-                                        </td>
-                                        <td className="py-4 px-6 text-gray-600">
-                                            {sub.submittedAt ? new Date(sub.submittedAt).toLocaleDateString() : '--'}
-                                        </td>
-                                        <td className="py-4 px-6 font-medium text-[#374151]">
-                                            {sub.marks !== null && sub.marks !== undefined ? `${sub.marks} / ${sub.maxMarks}` : '--'}
-                                        </td>
-                                        <td className="py-4 px-6">
-                                            <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-                                                sub.status === 'Graded' 
-                                                    ? 'bg-green-50 text-[#15803D] border border-green-200' 
-                                                    : sub.status === 'Submitted'
-                                                    ? 'bg-blue-50 text-blue-600 border border-blue-200'
-                                                    : 'bg-yellow-50 text-yellow-600 border border-yellow-200'
-                                            }`}>
-                                                {sub.status}
-                                            </span>
-                                        </td>
-                                        <td className="py-4 px-6 text-right">
-                                            <button
-                                                onClick={() => openReviewModal(sub)}
-                                                className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-50 text-[#374151] hover:bg-green-50 hover:text-[#15803D] border border-gray-200 transition-colors"
-                                            >
-                                                {sub.status === 'Graded' ? 'Edit Review' : 'Review'}
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+            {/* Non-Table Row-Column Grid Container */}
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                {/* Header Row (Desktop View) */}
+                <div className="hidden md:grid grid-cols-12 bg-[#F9FAFB] border-b border-gray-200 px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    <div className="col-span-3">Student</div>
+                    <div className="col-span-3">Assignment</div>
+                    <div className="col-span-2">Submitted Date</div>
+                    <div className="col-span-1">Marks</div>
+                    <div className="col-span-2">Status</div>
+                    <div className="col-span-1 text-right">Action</div>
+                </div>
+
+                {/* Body Rows */}
+                <div className="divide-y divide-gray-100 text-sm">
+                    {submissions.length === 0 ? (
+                        <div className="py-12 text-center text-gray-500">
+                            No submissions found for your assignments.
+                        </div>
+                    ) : (
+                        submissions.map((sub) => (
+                            <div 
+                                key={sub.id} 
+                                className="grid grid-cols-1 md:grid-cols-12 gap-4 p-6 items-center hover:bg-[#F9FAFB] transition-colors"
+                            >
+                                {/* Student */}
+                                <div className="md:col-span-3 flex flex-col justify-center">
+                                    <span className="md:hidden text-xs font-bold text-gray-400 uppercase mb-1">Student</span>
+                                    <div className="font-semibold text-[#374151]">{sub.studentName}</div>
+                                    <div className="text-xs text-gray-400">{sub.studentEmail}</div>
+                                </div>
+
+                                {/* Assignment */}
+                                <div className="md:col-span-3 flex flex-col justify-center">
+                                    <span className="md:hidden text-xs font-bold text-gray-400 uppercase mb-1">Assignment</span>
+                                    <div className="text-[#374151] font-medium">{sub.assignmentTitle}</div>
+                                    <div className="text-xs text-gray-500">{sub.className}</div>
+                                </div>
+
+                                {/* Submitted Date */}
+                                <div className="md:col-span-2 flex flex-col justify-center">
+                                    <span className="md:hidden text-xs font-bold text-gray-400 uppercase mb-1">Submitted Date</span>
+                                    <div className="text-gray-600">
+                                        {sub.submittedAt ? new Date(sub.submittedAt).toLocaleDateString() : '--'}
+                                    </div>
+                                </div>
+
+                                {/* Marks */}
+                                <div className="md:col-span-1 flex flex-col justify-center">
+                                    <span className="md:hidden text-xs font-bold text-gray-400 uppercase mb-1">Marks</span>
+                                    <div className="font-medium text-[#374151]">
+                                        {sub.marks !== null && sub.marks !== undefined ? `${sub.marks} / ${sub.maxMarks}` : '--'}
+                                    </div>
+                                </div>
+
+                                {/* Status */}
+                                <div className="md:col-span-2 flex flex-col justify-center">
+                                    <span className="md:hidden text-xs font-bold text-gray-400 uppercase mb-1">Status</span>
+                                    <div>
+                                        <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${
+                                            sub.status === 'Graded' 
+                                                ? 'bg-green-50 text-[#15803D] border border-green-200' 
+                                                : sub.status === 'Submitted'
+                                                ? 'bg-blue-50 text-blue-600 border border-blue-200'
+                                                : 'bg-yellow-50 text-yellow-600 border border-yellow-200'
+                                        }`}>
+                                            {sub.status}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Action */}
+                                <div className="md:col-span-1 flex items-center md:justify-end pt-2 md:pt-0">
+                                    <button
+                                        onClick={() => openReviewModal(sub)}
+                                        className="w-full md:w-auto px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-50 text-[#374151] hover:bg-green-50 hover:text-[#15803D] border border-gray-200 transition-colors text-center"
+                                    >
+                                        {sub.status === 'Graded' ? 'Edit Review' : 'Review'}
+                                    </button>
+                                </div>
+                            </div>
+                        ))
+                    )}
                 </div>
             </div>
 
@@ -381,7 +469,7 @@ export default function StudentSubmissionsPage() {
                                     </label>
                                     <select
                                         value={reviewData.status}
-                                        onChange={(e) => setReviewData(prev => ({ ...prev, status: e.target.value as any }))}
+                                        onChange={(e) => setReviewData(prev => ({ ...prev, status: e.target.value as 'Submitted' | 'Graded' | 'Pending' }))}
                                         className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#15803D] outline-none text-sm bg-white transition-all"
                                     >
                                         <option value="Submitted">Submitted (Needs Grading)</option>

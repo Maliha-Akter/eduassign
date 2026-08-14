@@ -8,8 +8,8 @@ import {
   X,
   LogOut,
   User as UserIcon,
+  GraduationCap,
   LayoutDashboard,
-  BookOpen,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -21,7 +21,7 @@ interface NavLink {
   href: string;
 }
 
-export default function Navbar() {
+export default function Navbar({ animated }: { animated?: boolean } = {}) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -37,24 +37,34 @@ export default function Navbar() {
   const user = session?.user as User | undefined;
   const isLoggedIn = !!user;
 
-  const navLinks: NavLink[] = [
-    { label: "Home", href: "/" },
-    { label: "Features", href: "/features" },
-    { label: "How It Works", href: "/how-it-works" },
-    { label: "About", href: "/about" },
-    { label: "Contact", href: "/contact" },
-  ];
+  const [entered, setEntered] = useState(false);
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      setEntered(!!animated);
+    });
+    return () => cancelAnimationFrame(id);
+  }, [animated]);
 
   const getDashboardPath = (role?: string) => {
     switch (role?.toLowerCase()) {
       case "admin":
+        return "/dashboard/admin";
       case "teacher":
+        return "/dashboard/teacher";
       case "student":
-        return "/dashboard";
+        return "/dashboard/student";
       default:
         return "/dashboard";
     }
   };
+
+  const navLinks: NavLink[] = [
+    { label: "Home", href: "/" },
+    { label: "Features", href: "/FeaturesPage" },
+    { label: "How It Works", href: "/how-it-works" },
+    { label: "About", href: "/about" },
+  ];
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -104,29 +114,28 @@ export default function Navbar() {
 
   if (isPending) {
     return (
-      <div className="w-full h-20 bg-[#F9FAFB] border-b border-gray-200 sticky top-0 z-50 animate-pulse" />
+      <div className="w-full h-20 bg-[#F9FAFB] border-b border-gray-200 sticky top-0 z-60 animate-pulse" />
     );
   }
 
+  const animatedClass = animated
+    ? `${entered ? "opacity-100 translate-y-0 scale-100" : "opacity-0 -translate-y-8 scale-95"} transition-all duration-700 ease-out`
+    : "";
+
   return (
-    <nav className="w-full bg-[#F9FAFB]/95 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 shadow-sm text-[#374151]">
+    <nav className={`w-full bg-[#F9FAFB]/95 backdrop-blur-md border-b border-gray-200 sticky top-0 z-60 shadow-sm text-[#374151] ${animatedClass}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-20 items-center">
-          
+
           {/* Brand Logo */}
           <div className="flex-shrink-0 flex items-center">
-            <Link href="/" className="text-2xl font-bold flex items-center gap-2.5 group focus:outline-none">
-              <div className="bg-[#15803D] text-white p-2 rounded-xl shadow-md transition-transform duration-200 group-hover:scale-105">
-                <BookOpen className="w-6 h-6 text-white" />
+            <Link href="/" className="text-xl font-bold flex items-center gap-2 group">
+              <div className="bg-[#15803D] text-[#F59E0B] p-1.5 rounded-lg shadow-sm transition-transform group-hover:scale-105">
+                <GraduationCap className="w-5 h-5" />
               </div>
-              <div className="flex flex-col">
-                <span className="text-[#374151] tracking-tight text-2xl font-black">
-                  Edu<span className="text-[#15803D]">Assign</span>
-                </span>
-                <span className="text-[10px] tracking-widest uppercase font-bold text-[#F59E0B] -mt-1">
-                  Portal
-                </span>
-              </div>
+              <span className="text-[#374151] tracking-tight text-xl font-black">
+                Edu<span className="text-[#15803D]">Assign</span>
+              </span>
             </Link>
           </div>
 
@@ -157,8 +166,8 @@ export default function Navbar() {
                 <span className="h-5 w-5 animate-spin rounded-full border-2 border-[#15803D] border-t-transparent"></span>
               </div>
             ) : isLoggedIn ? (
-              
-              /* Logged In: Profile Dropdown */
+
+              /* Logged In: Profile Dropdown with Dashboard */
               <div className="relative hidden lg:block" ref={dropdownRef}>
                 <button
                   onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
@@ -184,28 +193,13 @@ export default function Navbar() {
 
                 {isProfileDropdownOpen && (
                   <div className="absolute right-0 top-14 mt-2 w-56 rounded-xl shadow-xl py-1 bg-white ring-1 ring-black/5 z-50 border border-gray-100 overflow-hidden">
-                    <div className="px-4 py-3 border-b border-gray-100 bg-[#F9FAFB]">
-                      <p className="text-sm font-bold text-[#374151] truncate">{user?.name}</p>
-                      <p className="text-xs text-gray-500 truncate mt-0.5">{user?.email}</p>
-                    </div>
-
-                    <div className="py-1 border-b border-gray-100">
-                      <Link
-                        href={getDashboardPath(user?.role)}
-                        onClick={() => setIsProfileDropdownOpen(false)}
-                        className="flex items-center px-4 py-2 text-sm text-[#374151] hover:bg-green-50 hover:text-[#15803D] font-medium transition-colors"
-                      >
-                        <LayoutDashboard className="w-4 h-4 mr-2.5 text-gray-400" /> Dashboard
-                      </Link>
-                      <Link
-                        href="/profile"
-                        onClick={() => setIsProfileDropdownOpen(false)}
-                        className="flex items-center px-4 py-2 text-sm text-[#374151] hover:bg-green-50 hover:text-[#15803D] font-medium transition-colors"
-                      >
-                        <UserIcon className="w-4 h-4 mr-2.5 text-gray-400" /> Profile
-                      </Link>
-                    </div>
-
+                    <Link
+                      href={getDashboardPath(user?.role)}
+                      onClick={() => setIsProfileDropdownOpen(false)}
+                      className="flex items-center w-full text-left px-4 py-2.5 text-sm text-[#374151] hover:bg-gray-50 font-semibold transition-colors border-b border-gray-100"
+                    >
+                      <LayoutDashboard className="w-4 h-4 mr-2.5 text-[#15803D]" /> Dashboard
+                    </Link>
                     <button
                       onClick={handleLogout}
                       className="flex items-center w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 font-semibold transition-colors"
@@ -273,25 +267,13 @@ export default function Navbar() {
 
           <div className="px-4 border-t border-gray-100 pt-4 mt-2">
             {isLoggedIn ? (
-              <div className="space-y-2">
-                <div className="px-4 py-2 mb-2 bg-[#F9FAFB] rounded-lg">
-                  <p className="text-sm font-bold text-[#374151] truncate">{user?.name}</p>
-                  <p className="text-xs text-[#15803D] uppercase font-bold mt-1">{user?.role} Account</p>
-                </div>
-                
+              <div className="space-y-1">
                 <Link
                   href={getDashboardPath(user?.role)}
                   onClick={() => setIsOpen(false)}
-                  className="flex items-center px-4 py-3 rounded-lg text-base font-medium text-[#374151] hover:text-[#15803D] hover:bg-green-50"
+                  className="flex items-center w-full text-left px-4 py-3 rounded-lg text-base font-semibold text-[#374151] hover:bg-gray-50"
                 >
-                  <LayoutDashboard className="w-5 h-5 mr-3 text-gray-400" /> Dashboard
-                </Link>
-                <Link
-                  href="/profile"
-                  onClick={() => setIsOpen(false)}
-                  className="flex items-center px-4 py-3 rounded-lg text-base font-medium text-[#374151] hover:text-[#15803D] hover:bg-green-50"
-                >
-                  <UserIcon className="w-5 h-5 mr-3 text-gray-400" /> Profile
+                  <LayoutDashboard className="w-5 h-5 mr-3 text-[#15803D]" /> Dashboard
                 </Link>
                 <button
                   onClick={handleLogout}

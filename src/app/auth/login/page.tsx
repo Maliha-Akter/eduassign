@@ -134,18 +134,18 @@ function LoginForm() {
                     {isLoading ? <RefreshCw className="animate-spin" size={16} /> : "Log In"}
                 </Button>
                 
-                <Button
+                {/* <Button
                     type="button"
                     onClick={handleDemoLogin}
                     isDisabled={isLoading}
                     className="w-full h-11 rounded-xl font-semibold text-sm text-[#374151] border border-gray-200 bg-white hover:bg-green-50 hover:border-[#15803D]/30 hover:text-[#15803D] transition-all"
                 >
                     Login as Demo Student
-                </Button>
+                </Button> */}
             </form>
 
             <div className="mt-6 flex flex-col gap-3">
-                <div className="relative flex items-center justify-center">
+                {/* <div className="relative flex items-center justify-center">
                     <div className="absolute inset-0 flex items-center">
                         <div className="w-full border-t border-gray-200"></div>
                     </div>
@@ -159,7 +159,7 @@ function LoginForm() {
                     className="w-full h-11 rounded-xl font-semibold text-sm bg-white border border-gray-200 text-[#374151] hover:bg-gray-50 flex items-center justify-center transition-all shadow-sm"
                 >
                     <FcGoogle size={18} className="mr-2" /> Google
-                </Button>
+                </Button> */}
 
                 <p className="text-center text-xs text-[#374151] mt-2 font-medium">
                     New here? <Link href={`/auth/register?callbackUrl=${encodeURIComponent(callbackUrl)}`} className="text-[#15803D] hover:text-[#F59E0B] hover:underline font-bold ml-1 transition-colors">Create Account</Link>

@@ -30,24 +30,22 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
     // ✅ Dynamic Role-Based Menus
     const getSidebarLinks = (role: string) => {
-        const baseLinks = [
-            { label: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> }
-        ];
+        
 
         if (role === 'admin') {
             return [
-                ...baseLinks,
+                { label: 'Dashboard', href: '/dashboard/admin', icon: <LayoutDashboard className="w-5 h-5" /> },
                 { label: 'Manage Users', href: '/dashboard/admin/users', icon: <Users className="w-5 h-5" /> },
-                { label: 'Classes & Subjects', href: '/dashboard/admin/classes', icon: <BookOpen className="w-5 h-5" /> },
-                { label: 'Assign Teachers', href: '/dashboard/admin/assign', icon: <UserPlus className="w-5 h-5" /> },
+                { label: 'Classes & Subjects', href: '/dashboard/admin/courses', icon: <BookOpen className="w-5 h-5" /> },
+                { label: 'Assign Teachers', href: '/dashboard/admin/teacher-assignments', icon: <UserPlus className="w-5 h-5" /> },
                 { label: 'All Assignments', href: '/dashboard/admin/assignments', icon: <Files className="w-5 h-5" /> },
-                { label: 'Settings', href: '/dashboard/admin/settings', icon: <Settings className="w-5 h-5" /> },
+                // { label: 'Settings', href: '/dashboard/admin/settings', icon: <Settings className="w-5 h-5" /> },
             ];
         }
 
         if (role === 'teacher') {
             return [
-                ...baseLinks,
+                { label: 'Dashboard', href: '/dashboard/teacher', icon: <LayoutDashboard className="w-5 h-5" /> },
                 { label: 'My Students', href: '/dashboard/teacher/students', icon: <Users className="w-5 h-5" /> }, // NEW LINK
                 { label: 'My Assignments', href: '/dashboard/teacher/assignments', icon: <Files className="w-5 h-5" /> },
                 { label: 'Create Assignment', href: '/dashboard/teacher/assignments/new', icon: <FilePlus className="w-5 h-5" /> },
@@ -57,8 +55,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
         // Default to Student
         return [
-            ...baseLinks,
-            { label: 'My Classes', href: '/dashboard/student/classes', icon: <BookOpen className="w-5 h-5" /> },
+            { label: 'Dashboard', href: '/dashboard/student', icon: <LayoutDashboard className="w-5 h-5" /> },
+            // { label: 'My Classes', href: '/dashboard/student/classes', icon: <BookOpen className="w-5 h-5" /> },
             { label: 'Assigned Work', href: '/dashboard/student/assignments', icon: <FileText className="w-5 h-5" /> },
             { label: 'Submissions', href: '/dashboard/student/submissions', icon: <FileText className="w-5 h-5" /> },
             { label: 'Grades & Feedback', href: '/dashboard/student/grades', icon: <Award className="w-5 h-5" /> },

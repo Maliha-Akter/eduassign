@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { Button, Link, TextField, Label, InputGroup, Input } from "@heroui/react";
 import { Eye, EyeOff, AtSign, Lock, User, RefreshCw, GraduationCap, School, Image as ImageIcon } from "lucide-react";
 import { authClient } from "@/app/lib/auth-client";
@@ -9,6 +9,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { FcGoogle } from "react-icons/fc";
 
 type Role = "student" | "teacher";
+
+interface Course {
+    id: string;
+    name: string;
+    code: string;
+}
 
 function RegisterForm() {
     const router = useRouter();
@@ -33,11 +39,39 @@ function RegisterForm() {
     const [primarySubject, setPrimarySubject] = useState("");
     const [qualification, setQualification] = useState("");
 
+    // Dynamic Courses state
+    const [courses, setCourses] = useState<Course[]>([]);
+    const [loadingCourses, setLoadingCourses] = useState(false);
+
     // Form state
     const [errors, setErrors] = useState<Record<string, string | null>>({});
     const [isLoading, setIsLoading] = useState(false);
     const [isVisible, setIsVisible] = useState(false);
     const [isConfirmVisible, setIsConfirmVisible] = useState(false);
+
+    // Fetch dynamic courses on mount
+    useEffect(() => {
+        const fetchCourses = async () => {
+            try {
+                setLoadingCourses(true);
+                // Note: Ensure this URL exactly matches your updated backend routing
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5024"}/api/admin/courses`);
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    setCourses(data);
+                } else {
+                    console.error("Failed to fetch courses, status:", res.status);
+                }
+            } catch (err) {
+                console.error("Failed to load courses", err);
+            } finally {
+                setLoadingCourses(false);
+            }
+        };
+
+        fetchCourses();
+    }, []);
 
     const validateForm = () => {
         const newErrors: Record<string, string> = {};
@@ -219,7 +253,6 @@ function RegisterForm() {
                 <div className="flex flex-col gap-1.5">
                     <div className="flex justify-between items-center">
                         <Label className="text-xs font-medium text-slate-600">Profile Picture (Optional)</Label>
-                        {/* Updated helper text here */}
                         <span className="text-[9px] text-slate-400">URL must start with http:// or https://</span>
                     </div>
                     <InputGroup className="flex items-center gap-2 border border-slate-200 rounded-xl px-3 bg-slate-50 focus-within:border-amber-500 transition-colors">
@@ -227,8 +260,8 @@ function RegisterForm() {
                         <Input
                             placeholder="https://example.com/avatar.png"
                             type="url"
-                            pattern="^https?://.*" // Added HTML5 pattern validation
-                            title="URL must start with http:// or https://" // Added tooltip for validation
+                            pattern="^https?://.*" 
+                            title="URL must start with http:// or https://" 
                             value={image}
                             onChange={(e) => setImage(e.target.value)}
                             className="w-full bg-transparent py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400"
@@ -297,7 +330,7 @@ function RegisterForm() {
                                 className="w-full bg-transparent py-2.5 text-sm text-slate-900 outline-none cursor-pointer"
                             >
                                 <option value="" disabled>Select Class...</option>
-                                {Array.from({ length: 10 }, (_, i) => {
+                                {Array.from({ length: 12 }, (_, i) => {
                                     const classNum = (i + 1).toString();
 
                                     return (
@@ -311,6 +344,7 @@ function RegisterForm() {
                         {errors.studentClass && <p className="text-[10px] text-red-500 mt-0.5">{errors.studentClass}</p>}
                     </div>
                 )}
+                
                 {/* Conditional Fields: Teacher */}
                 {role === "teacher" && (
                     <div className="flex flex-col gap-4 p-4 rounded-2xl bg-amber-50/40 border border-amber-200/60">
@@ -321,18 +355,17 @@ function RegisterForm() {
                             <select
                                 value={primarySubject}
                                 onChange={(e) => setPrimarySubject(e.target.value)}
+                                disabled={loadingCourses}
                                 className={`w-full border rounded-xl px-3 py-2 bg-white text-sm text-slate-900 outline-none focus:border-amber-500 transition-colors ${errors.primarySubject ? "border-red-500" : "border-slate-200"}`}
                             >
-                                <option value="" disabled>Select Subject</option>
-                                <option value="Mathematics">Mathematics</option>
-                                <option value="Physics">Physics</option>
-                                <option value="Chemistry">Chemistry</option>
-                                <option value="Biology">Biology</option>
-                                <option value="ICT">ICT</option>
-                                <option value="English">English</option>
-                                <option value="Bangla">Bangla</option>
-                                <option value="Accounting">Accounting</option>
-                                <option value="Finance">Finance</option>
+                                <option value="" disabled>
+                                    {loadingCourses ? "Loading subjects..." : "Select Subject"}
+                                </option>
+                                {courses.map((course) => (
+                                    <option key={course.id} value={course.name}>
+                                        {course.name} {course.code ? `(${course.code})` : ""}
+                                    </option>
+                                ))}
                             </select>
                             {errors.primarySubject && <p className="text-[10px] text-red-500 mt-0.5">{errors.primarySubject}</p>}
                         </div>
@@ -363,7 +396,7 @@ function RegisterForm() {
                     {isLoading ? "Registering..." : `Register as ${role === "teacher" ? "Teacher" : "Student"}`}
                 </Button>
 
-                <div className="relative flex items-center py-2">
+                {/* <div className="relative flex items-center py-2">
                     <div className="flex-grow border-t border-slate-200"></div>
                     <span className="flex-shrink-0 mx-4 text-xs font-medium text-slate-400">OR</span>
                     <div className="flex-grow border-t border-slate-200"></div>
@@ -377,7 +410,7 @@ function RegisterForm() {
                 >
                     <FcGoogle size={20} />
                     Sign up with Google
-                </Button>
+                </Button> */}
 
                 <p className="text-center text-xs text-slate-500 mt-2">
                     Already have an account?{" "}

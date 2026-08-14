@@ -7,10 +7,30 @@ import { toast } from 'react-toastify';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5024";
 
+interface Assignment {
+    id: string | number;
+    title: string;
+    description: string;
+    teacherName?: string;
+    teacherEmail?: string;
+    deadline: string;
+    maximumMarks: number;
+}
+
+interface Submission {
+    id: string | number;
+    assignmentId: string | number;
+    answer: string;
+    status: string;
+    submittedAt?: string;
+    marks?: number | null;
+    feedback?: string;
+}
+
 export default function AssignmentSubmissionPage() {
     const { id: assignmentId } = useParams();
-    const [assignment, setAssignment] = useState<any>(null);
-    const [submission, setSubmission] = useState<any>(null);
+    const [assignment, setAssignment] = useState<Assignment | null>(null);
+    const [submission, setSubmission] = useState<Submission | null>(null);
     const [loading, setLoading] = useState(true);
     const [answer, setAnswer] = useState("");
     const [submitting, setSubmitting] = useState(false);
@@ -20,13 +40,16 @@ export default function AssignmentSubmissionPage() {
             try {
                 // Fetch Assignment Details
                 const assRes = await fetch(`${API_BASE_URL}/api/assignments/${assignmentId}`, { credentials: "include" });
-                if (assRes.ok) setAssignment(await assRes.json());
+                if (assRes.ok) {
+                    const data: Assignment = await assRes.json();
+                    setAssignment(data);
+                }
 
                 // Fetch Existing Submission (if any)
                 const subRes = await fetch(`${API_BASE_URL}/api/submissions/assignment/${assignmentId}`, { credentials: "include" });
                 if (subRes.ok && subRes.status === 200) {
-                    const data = await subRes.json();
-                    if(data) {
+                    const data: Submission = await subRes.json();
+                    if (data) {
                         setSubmission(data);
                         setAnswer(data.answer);
                     }
@@ -70,11 +93,12 @@ export default function AssignmentSubmissionPage() {
                 throw new Error(err);
             }
 
-            const data = await response.json();
+            const data: Submission = await response.json();
             setSubmission(data);
             toast.success(submission ? "Submission updated!" : "Assignment submitted successfully!");
-        } catch (error: any) {
-            toast.error(error.message || "Failed to submit");
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : "Failed to submit";
+            toast.error(errorMessage);
         } finally {
             setSubmitting(false);
         }

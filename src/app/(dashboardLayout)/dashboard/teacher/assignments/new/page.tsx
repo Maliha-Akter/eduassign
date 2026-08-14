@@ -85,8 +85,9 @@ export default function CreateAssignmentPage() {
             const responseData = await res.json();
             alert(responseData.message || `Assignment ${status === "Draft" ? "saved as draft" : "published"} successfully!`);
             reset();
-        } catch (error: any) {
-            alert(error.message || "An unexpected error occurred.");
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred.";
+            alert(errorMessage);
         } finally {
             setIsSubmitting(false);
             setSubmitType(null);

@@ -1,10 +1,11 @@
+
+
 import AnimatedBanner from "@/components/AnimatedBanner";
-import Image from "next/image";
 
 export default function Home() {
   return (
     <div>
-      <AnimatedBanner />
+      <AnimatedBanner></AnimatedBanner>
     </div>
   );
 }
